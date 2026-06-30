@@ -15,6 +15,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="命定造型">
 
+<!-- 分享預覽（社群／訊息連結卡片用 LOGO，不再顯示「字」佔位） -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="命定造型・今日推薦">
+<meta property="og:description" content="個人造型心法：色彩、身型、臉型一次到位的每日穿搭建議。">
+<meta property="og:image" content="/assets/app-icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="/assets/app-icon.png">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,500;0,600;0,700;1,500;1,600&family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700;800;900&family=Noto+Serif+TC:wght@500;600;700;900&display=swap" rel="stylesheet">
@@ -1344,9 +1352,7 @@
     <!-- 新增待購單品的 inline 表單 -->
     <div id="addWishForm" style="display:none;" class="card">
       <div style="font-size:14px;font-weight:700;margin-bottom:12px;">新增一件想找的單品</div>
-      <input id="wishItemName" type="text" placeholder="例如：白色高腰寬褲、棕色皮革托特包…"
-        style="width:100%;border:1.5px solid var(--line-strong);border-radius:var(--radius-s);padding:12px 14px;font-size:14px;font-family:var(--sans);color:var(--ink);background:var(--bg);outline:none;margin-bottom:10px;">
-      <div style="font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:8px;">分類</div>
+      <div style="font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:8px;">先選分類</div>
       <div class="chip-row" id="wishCatChips" style="margin-bottom:14px;">
         <button class="chip" data-cat="上衣" onclick="selectWishCat(this)">上衣</button>
         <button class="chip" data-cat="下身" onclick="selectWishCat(this)">下身</button>
@@ -1356,6 +1362,8 @@
         <button class="chip" data-cat="配飾" onclick="selectWishCat(this)">配飾</button>
         <button class="chip" data-cat="彩妝" onclick="selectWishCat(this)">彩妝</button>
       </div>
+      <input id="wishItemName" type="text" placeholder="例如：白色高腰寬褲、棕色皮革托特包…"
+        style="width:100%;border:1.5px solid var(--line-strong);border-radius:var(--radius-s);padding:12px 14px;font-size:14px;font-family:var(--sans);color:var(--ink);background:var(--bg);outline:none;margin-bottom:14px;">
       <div style="display:flex;gap:8px;">
         <button class="btn btn-ghost btn-sm" onclick="closeAddWishItem()">取消</button>
         <button class="btn btn-primary btn-sm" onclick="confirmAddWishItem()">確認加入</button>
@@ -3122,9 +3130,22 @@ async function shareToday(){
   const modal = document.getElementById('share-modal');
   const txt = modal ? modal._shareText : '';
   if(!txt){ showToast('沒有可分享的內容'); return; }
+  // 嘗試帶上 App LOGO 圖檔，讓原生分享面板的預覽顯示品牌圖示，而不是「字」佔位
+  let shareFiles = [];
+  try{
+    const resp = await fetch('/assets/app-icon.png');
+    if(resp.ok){
+      const blob = await resp.blob();
+      const file = new File([blob], '命定造型.png', { type: blob.type || 'image/png' });
+      if(navigator.canShare && navigator.canShare({ files:[file] })) shareFiles = [file];
+    }
+  }catch(e){ /* 取圖失敗就只分享文字 */ }
+
   if(navigator.share){
     try{
-      await navigator.share({ title:'命定造型・今日推薦', text:txt });
+      const payload = { title:'命定造型・今日推薦', text:txt };
+      if(shareFiles.length) payload.files = shareFiles;
+      await navigator.share(payload);
     }catch(e){
       // 使用者自己取消分享不算錯誤，不提示
       if(e && e.name !== 'AbortError'){
@@ -3843,8 +3864,7 @@ function renderWardrobe(){
     }
     body += `<button class="btn btn-ghost btn-sm" style="margin-top:6px;" onclick="openAddOwned()">+ 手動新增已有單品</button>
       <div id="addOwnedForm" style="display:none;margin-top:12px;padding:14px;border:1.5px solid var(--line);border-radius:var(--radius-m);">
-        <input id="ownedName" type="text" placeholder="單品名稱，例如：米白色針織衫"
-          style="width:100%;border:1.5px solid var(--line-strong);border-radius:var(--radius-s);padding:11px 13px;font-size:14px;font-family:var(--sans);color:var(--ink);background:var(--bg);outline:none;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:8px;">先選分類</div>
         <div class="chip-row" id="ownedCatChips" style="margin-bottom:12px;">
           ${['上衣','下身','洋裝','外套','鞋','包','配飾'].map(c=>`<button class="chip" data-cat="${c}" onclick="selectOwnedCat(this)">${c}</button>`).join('')}
         </div>
@@ -3853,6 +3873,8 @@ function renderWardrobe(){
           <span style="font-size:12.5px;font-weight:700;color:var(--magenta-deep);">上傳單品照片（選填，自動縮小）</span>
           <input type="file" accept="image/*" style="display:none;" onchange="handleOwnedUpload(this)">
         </label>
+        <input id="ownedName" type="text" placeholder="單品名稱，例如：米白色針織衫"
+          style="width:100%;border:1.5px solid var(--line-strong);border-radius:var(--radius-s);padding:11px 13px;font-size:14px;font-family:var(--sans);color:var(--ink);background:var(--bg);outline:none;margin-bottom:10px;">
         <div style="display:flex;gap:8px;">
           <button class="btn btn-ghost btn-sm" onclick="closeAddOwned()">取消</button>
           <button class="btn btn-primary btn-sm" onclick="confirmAddOwned()">確認新增</button>
@@ -3878,7 +3900,7 @@ function toggleOwnedChip(catalogId){
 /* 手動新增已有單品的表單控制 */
 let ownedCatSelected='';
 let ownedPhotoTemp=null;
-function openAddOwned(){ const f=document.getElementById('addOwnedForm'); if(f){ f.style.display='block'; document.getElementById('ownedName').focus(); } ownedCatSelected=''; ownedPhotoTemp=null; }
+function openAddOwned(){ const f=document.getElementById('addOwnedForm'); if(f){ f.style.display='block'; } ownedCatSelected=''; ownedPhotoTemp=null; }
 function closeAddOwned(){ const f=document.getElementById('addOwnedForm'); if(f) f.style.display='none'; ownedPhotoTemp=null; }
 function selectOwnedCat(el){ document.querySelectorAll('#ownedCatChips .chip').forEach(c=>c.classList.remove('selected')); el.classList.add('selected'); ownedCatSelected=el.dataset.cat; }
 async function handleOwnedUpload(input){
@@ -4023,7 +4045,6 @@ function removeWishItem(idx){
 
 function openAddWishItem(){
   document.getElementById('addWishForm').style.display='block';
-  document.getElementById('wishItemName').focus();
   wishCatSelected='';
   document.querySelectorAll('#wishCatChips .chip').forEach(c=>c.classList.remove('selected'));
 }
