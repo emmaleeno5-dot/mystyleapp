@@ -23,6 +23,9 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="/assets/app-icon.png">
 
+<!-- 分享卡轉圖（讓分享預覽顯示品牌卡片而非空白） -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,500;0,600;0,700;1,500;1,600&family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700;800;900&family=Noto+Serif+TC:wght@500;600;700;900&display=swap" rel="stylesheet">
@@ -1362,6 +1365,11 @@
         <button class="chip" data-cat="配飾" onclick="selectWishCat(this)">配飾</button>
         <button class="chip" data-cat="彩妝" onclick="selectWishCat(this)">彩妝</button>
       </div>
+      <label style="display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;">
+        <div id="wishPhotoPreview" style="width:48px;height:48px;border-radius:var(--radius-s);border:1.5px dashed var(--line-strong);display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:18px;overflow:hidden;flex-shrink:0;">＋</div>
+        <span style="font-size:12.5px;font-weight:700;color:var(--magenta-deep);">上傳單品照片（選填，自動縮小）</span>
+        <input type="file" accept="image/*" style="display:none;" onchange="handleWishUpload(this)">
+      </label>
       <input id="wishItemName" type="text" placeholder="例如：白色高腰寬褲、棕色皮革托特包…"
         style="width:100%;border:1.5px solid var(--line-strong);border-radius:var(--radius-s);padding:12px 14px;font-size:14px;font-family:var(--sans);color:var(--ink);background:var(--bg);outline:none;margin-bottom:14px;">
       <div style="display:flex;gap:8px;">
@@ -2851,7 +2859,7 @@ function generateFormula(){
          `<b>包：</b>${od.bag}`, `<b>版型語氣：</b>${toneText}`])}
 
       ${expandBlock('03','今日色彩搭配','主色45%＋輔色25%＋層次色15%＋小點綴10%＋金屬5%，已依今天天氣從你的色庫挑選。',
-        [`<div style="display:flex;gap:0;height:34px;margin:4px 0 14px;border:1px solid var(--ink);">${five.map(x=>`<div style="flex:${parseInt(x.pct)};background:${x.hex};"></div>`).join('')}</div>`,
+        [`<div style="display:flex;gap:0;height:34px;margin:4px 0 14px;overflow:hidden;">${five.map(x=>`<div style="flex:${parseInt(x.pct)};background:${x.hex};"></div>`).join('')}</div>`,
          ...five.map(x=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">${dot(x.hex)}<div style="flex:1;"><b>${x.role}（${x.pct}）</b>　<span style="color:var(--ink-soft);font-size:12.5px;">${x.use}</span></div></div>`)])}
 
       ${expandBlock('04','今日身型修飾','強調哪裡、修飾哪裡，已結合你的身型與今天的需求。',
@@ -3071,7 +3079,10 @@ ${d.avoid.map(o=>`${o.label}：${o.text}`).join('\n')}`:''}
 
       <div id="share-card" style="margin:16px;border:1px solid var(--ink);overflow:hidden;">
         <div style="background:${bannerColor};color:#fff;padding:18px 18px 16px;">
-          <div style="font-size:11px;letter-spacing:2px;opacity:.85;">命定造型・今日推薦</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+            <img src="/assets/app-icon.png" crossorigin="anonymous" style="width:24px;height:24px;border-radius:50%;background:#fff;object-fit:cover;flex-shrink:0;" alt="命定造型">
+            <span style="font-size:11px;letter-spacing:2px;opacity:.9;font-weight:700;">命定造型・今日推薦</span>
+          </div>
           <div style="font-size:12px;opacity:.9;margin-top:2px;">${d.date}</div>
           <div style="font-size:14px;line-height:1.6;margin-top:10px;font-weight:600;">${d.style}</div>
           <div style="font-size:11px;opacity:.9;margin-top:8px;">${d.occasion}　${d.weather}　${d.moods}</div>
@@ -3130,16 +3141,30 @@ async function shareToday(){
   const modal = document.getElementById('share-modal');
   const txt = modal ? modal._shareText : '';
   if(!txt){ showToast('沒有可分享的內容'); return; }
-  // 嘗試帶上 App LOGO 圖檔，讓原生分享面板的預覽顯示品牌圖示，而不是「字」佔位
+  // 把整張分享卡轉成圖片來分享：縮圖／預覽就會看到品牌 LOGO 與完整今日建議
   let shareFiles = [];
+  const card = document.getElementById('share-card');
   try{
-    const resp = await fetch('/assets/app-icon.png');
-    if(resp.ok){
-      const blob = await resp.blob();
-      const file = new File([blob], '命定造型.png', { type: blob.type || 'image/png' });
-      if(navigator.canShare && navigator.canShare({ files:[file] })) shareFiles = [file];
+    if(card && window.html2canvas){
+      const canvas = await html2canvas(card, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false });
+      const blob = await new Promise(r => canvas.toBlob(r, 'image/png', 0.92));
+      if(blob){
+        const f = new File([blob], '命定造型_今日推薦.png', { type: 'image/png' });
+        if(navigator.canShare && navigator.canShare({ files:[f] })) shareFiles = [f];
+      }
     }
-  }catch(e){ /* 取圖失敗就只分享文字 */ }
+  }catch(e){ /* 轉圖失敗就退回下一階段 */ }
+  // 轉圖不成功時，至少帶上 App LOGO 圖檔當縮圖
+  if(!shareFiles.length){
+    try{
+      const resp = await fetch('/assets/app-icon.png');
+      if(resp.ok){
+        const blob = await resp.blob();
+        const f = new File([blob], '命定造型.png', { type: blob.type || 'image/png' });
+        if(navigator.canShare && navigator.canShare({ files:[f] })) shareFiles = [f];
+      }
+    }catch(e){}
+  }
 
   if(navigator.share){
     try{
@@ -3768,7 +3793,7 @@ function addWishFromSuggest(catalogId){
 /* 待購 → 標記已購買，轉入已有單品 */
 function buyWishItem(idx){
   const w = wishlist[idx];
-  addOwned({ catalogId:w.catalogId||null, name:w.name, cat:w.cat, isClassic:!!w.catalogId });
+  addOwned({ catalogId:w.catalogId||null, name:w.name, cat:w.cat, isClassic:!!w.catalogId, img:w.img||null });
   wishlist.splice(idx,1);
   saveWishlist(); renderWishlist(); renderWardrobe();
   showToast('已轉入「我已有的單品」');
@@ -3978,6 +4003,7 @@ function closePhotoWall(){ const m=document.getElementById('photoWall'); if(m) m
 function saveWishlist(){ store.set('mt_wishlist', wishlist); }
 let wishlist = store.get('mt_wishlist', null) || [];
 let wishCatSelected = '';
+let wishPhotoTemp = null;
 
 function renderWishlist(){
   const wrap = document.getElementById('wishlistItems');
@@ -3994,6 +4020,7 @@ function renderWishlist(){
       <div style="border:1.5px solid ${allDone?'var(--mint)':'var(--line)'};border-radius:var(--radius-m);margin-bottom:10px;overflow:hidden;">
         <!-- 單品標題列 -->
         <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;background:${allDone?'var(--mint-pale)':'var(--surface)'};" onclick="toggleWishItem(${idx})">
+          ${item.img?`<img src="${item.img}" alt="" style="width:40px;height:40px;border-radius:var(--radius-s);object-fit:cover;flex-shrink:0;">`:''}
           <div style="flex:1;">
             <div style="font-size:13.5px;font-weight:700;color:${allDone?'var(--mint)':'var(--ink)'};">${escapeHTML(item.name)}</div>
             <div style="font-size:11px;color:var(--ink-faint);margin-top:2px;">${item.cat} · 核對 ${doneCount}/${total} 項</div>
@@ -4046,17 +4073,30 @@ function removeWishItem(idx){
 function openAddWishItem(){
   document.getElementById('addWishForm').style.display='block';
   wishCatSelected='';
+  wishPhotoTemp=null;
+  const pv=document.getElementById('wishPhotoPreview'); if(pv) pv.innerHTML='＋';
   document.querySelectorAll('#wishCatChips .chip').forEach(c=>c.classList.remove('selected'));
 }
 function closeAddWishItem(){
   document.getElementById('addWishForm').style.display='none';
   document.getElementById('wishItemName').value='';
   wishCatSelected='';
+  wishPhotoTemp=null;
+  const _pv=document.getElementById('wishPhotoPreview'); if(_pv) _pv.innerHTML='＋';
 }
 function selectWishCat(el){
   document.querySelectorAll('#wishCatChips .chip').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
   wishCatSelected = el.dataset.cat;
+}
+async function handleWishUpload(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  try{
+    wishPhotoTemp = await compressImage(file, 480, 0.72);
+    const pv = document.getElementById('wishPhotoPreview');
+    if(pv) pv.innerHTML = `<img src="${wishPhotoTemp}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
+  }catch(e){ showToast('讀取照片失敗，請換一張試試'); }
 }
 
 function confirmAddWishItem(){
@@ -4064,7 +4104,7 @@ function confirmAddWishItem(){
   if(!name){ alert('請輸入想找的單品名稱'); return; }
   // 根據分類和 profile 動態生成核對問題
   const checks = generateChecks(name, wishCatSelected);
-  wishlist.unshift({ id: Date.now(), name, cat: wishCatSelected||'其他', expanded:true, checks });
+  wishlist.unshift({ id: Date.now(), name, cat: wishCatSelected||'其他', expanded:true, checks, img: wishPhotoTemp||null });
   saveWishlist();
   closeAddWishItem();
   renderWishlist();
