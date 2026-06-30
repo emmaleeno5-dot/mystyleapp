@@ -1123,7 +1123,7 @@
           <button class="quiz-option face-opt" onclick="answerFace(0,'round')"><span class="face-opt-fig" data-face="round"></span><span class="opt-text-wrap">圓臉<span class="opt-sub">臉長與臉寬接近，臉頰飽滿、下巴柔和</span></span></button>
           <button class="quiz-option face-opt" onclick="answerFace(0,'square')"><span class="face-opt-fig" data-face="square"></span><span class="opt-text-wrap">方臉<span class="opt-sub">額頭到下顎寬度接近，下顎轉折明顯</span></span></button>
           <button class="quiz-option face-opt" onclick="answerFace(0,'long')"><span class="face-opt-fig" data-face="long"></span><span class="opt-text-wrap">長臉<span class="opt-sub">臉的長度明顯大於寬度，縱向感強</span></span></button>
-          <button class="quiz-option face-opt" onclick="answerFace(0,'heart')"><span class="face-opt-fig" data-face="heart"></span><span class="opt-text-wrap">心形臉<span class="opt-sub">額頭較寬、下巴收得精緻偏尖</span></span></button>
+          <button class="quiz-option face-opt" onclick="answerFace(0,'heart')"><span class="face-opt-fig" data-face="heart"></span><span class="opt-text-wrap">倒三角形臉<span class="opt-sub">額頭較寬、下巴收得精緻偏尖</span></span></button>
           <button class="quiz-option face-opt" onclick="answerFace(0,'diamond')"><span class="face-opt-fig" data-face="diamond"></span><span class="opt-text-wrap">菱形臉<span class="opt-sub">顴骨是最寬的位置，額頭與下巴較窄</span></span></button>
           <button class="quiz-option face-opt" onclick="answerFace(0,'unsure')"><span class="face-opt-fig" data-face="unsure"></span><span class="opt-text-wrap">不確定<span class="opt-sub">後面幾題會幫你推斷，給你安全的建議</span></span></button>
         </div>
@@ -2211,7 +2211,7 @@ const FACE_SHAPE = {
     glassesShape:'現代俐落大方框，橫向拉寬縮短比例。',
     makeup:'腮紅橫向平刷縮短縱向感，眉型平緩柔和、避免高挑眉峰。',
     accFShape:'貼耳耳釘或鎖骨鍊做橫向延伸，避免過長垂墜。'},
-  heart:{label:'心形臉', core:'目標是平衡上寬下窄、補足下半臉份量。',
+  heart:{label:'倒三角形臉', core:'目標是平衡上寬下窄、補足下半臉份量。',
     hair:'下巴附近留些份量（鎖骨髮、髮尾內彎），平衡偏寬的上半臉。',
     bang:'八字瀏海或側分，柔化額頭寬度。',
     glassesShape:'下框較重或圓潤的框型，把視覺重心往下帶。',
@@ -2467,8 +2467,11 @@ const HAIR_TACTIC_LABEL = {
 
 // 臉型外輪廓插畫（洋紅色系，與身型插畫一致風格）
 function faceSVG(shape){
-  // 改用手繪臉型插圖（去背 PNG）；unsure 用標準臉代替
-  const key = ({oval:'oval',round:'round',square:'square',long:'long',heart:'heart',diamond:'diamond',unsure:'oval'})[shape] || 'oval';
+  // 改用手繪臉型插圖（去背 PNG）；unsure 與身形一致改放問號圈
+  if(shape==='unsure'){
+    return `<span style="width:42px;height:42px;border-radius:50%;border:1px solid var(--magenta);color:var(--magenta);font-family:var(--display);font-size:21px;font-weight:600;display:flex;align-items:center;justify-content:center;">？</span>`;
+  }
+  const key = ({oval:'oval',round:'round',square:'square',long:'long',heart:'heart',diamond:'diamond'})[shape] || 'oval';
   return `<img src="assets/face-${key}.png" alt="" style="width:100%;height:100%;object-fit:contain;display:block;">`;
 }
 function injectFaceFigures(){
