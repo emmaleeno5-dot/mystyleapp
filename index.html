@@ -2843,9 +2843,16 @@ function generateFormula(){
   const out = document.getElementById('formulaOutput');
   out.style.display = 'block';
   const dot = hex=>`<span style="display:inline-block;width:26px;height:26px;background:${hex};box-shadow:inset 0 0 0 1px rgba(79,46,39,0.14);"></span>`;
+  // TODAY'S LOOK 橫幅：依今日色票主角色連動（沿用分享卡的明度保護，確保白字可讀）
+  const _lumLook = hex => { const m=(hex||'').replace('#',''); if(m.length<6) return 0.5; const r=parseInt(m.slice(0,2),16)/255,g=parseInt(m.slice(2,4),16)/255,b=parseInt(m.slice(4,6),16)/255; const f=c=>c<=0.03928?c/12.92:Math.pow((c+0.055)/1.055,2.4); return 0.2126*f(r)+0.7152*f(g)+0.0722*f(b); };
+  let lookBanner = (five[0] && five[0].hex) || '#2A2521';
+  if(_lumLook(lookBanner) < 0.06 || _lumLook(lookBanner) > 0.42){
+    const cands = five.map(x=>x.hex).filter(Boolean);
+    if(cands.length){ lookBanner = cands.reduce((best,h)=> Math.abs(_lumLook(h)-0.24) < Math.abs(_lumLook(best)-0.24) ? h : best, cands[0]); }
+  }
 
   out.innerHTML = `
-    <div class="today-formula">
+    <div class="today-formula" style="background:${lookBanner};">
       <div class="tf-eyebrow">Today&#39;s Look</div>
       <div class="tf-text">${todaySentence}</div>
     </div>
