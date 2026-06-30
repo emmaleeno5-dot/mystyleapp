@@ -466,6 +466,7 @@
     line-height: 0.98;
     color: var(--ink);
     margin: 10px 0 12px;
+    white-space: nowrap;
   }
   .result-hero .result-tag {
     font-size: 13px;
@@ -1396,6 +1397,27 @@ const profile = { color: null, shape: null, face: null };
 const occasionState = { occ: null, weather: null, activity: null, mood: [], need: [] };
 let todayShareData = null;
 
+/* ======== 結果標題自動縮放：依容器寬度把 .result-name 縮到剛好一行 ========
+   桃機 / 手機螢幕放大縮小、文字長短不同都能自動適配，不再換行。 */
+function fitResultName(){
+  const MAX = 52, MIN = 20;
+  document.querySelectorAll('.result-hero .result-name').forEach(el=>{
+    // 只處理看得到的（隱藏元素 clientWidth=0）
+    el.style.fontSize = MAX + 'px';
+    if(!el.clientWidth) return;
+    let size = MAX;
+    while(size > MIN && el.scrollWidth > el.clientWidth){
+      size -= 1;
+      el.style.fontSize = size + 'px';
+    }
+  });
+}
+let _fitRaf = null;
+window.addEventListener('resize', ()=>{
+  if(_fitRaf) cancelAnimationFrame(_fitRaf);
+  _fitRaf = requestAnimationFrame(fitResultName);
+});
+
 function goPage(name){
   const pageId = name==='color-hub' ? 'color-hub'
                : name==='quiz-color' ? 'quiz-color'
@@ -1416,6 +1438,7 @@ function goPage(name){
 
   if(pageId==='recommend') refreshRecommendGate();
   if(pageId==='mine') refreshMinePage();
+  requestAnimationFrame(fitResultName);
   window.scrollTo({top:0,behavior:'instant'});
 }
 
@@ -1728,10 +1751,10 @@ function buildSeasonPalettes(type){
 function expandSeasonBlock(p){
   const seasons = ['spring','summer','autumn','winter'];
   const meta = {
-    spring:{icon:'<svg width="26" height="26" viewBox="0 0 32 32" style="display:block"><g fill="none" stroke="#4F332B" stroke-width="2.2" stroke-linejoin="round"><circle cx="16.0" cy="9.2" r="4.3"/><circle cx="22.5" cy="13.9" r="4.3"/><circle cx="20.0" cy="21.5" r="4.3"/><circle cx="12.0" cy="21.5" r="4.3"/><circle cx="9.5" cy="13.9" r="4.3"/></g></svg>', name:'春季選色', use:'明亮輕盈時穿'},
-    summer:{icon:'<svg width="26" height="26" viewBox="0 0 32 32" style="display:block"><g fill="none" stroke="#4F332B" stroke-width="2.2" stroke-linecap="round"><line x1="24.0" y1="16.0" x2="27.5" y2="16.0"/><line x1="21.7" y1="21.7" x2="24.1" y2="24.1"/><line x1="16.0" y1="24.0" x2="16.0" y2="27.5"/><line x1="10.3" y1="21.7" x2="7.9" y2="24.1"/><line x1="8.0" y1="16.0" x2="4.5" y2="16.0"/><line x1="10.3" y1="10.3" x2="7.9" y2="7.9"/><line x1="16.0" y1="8.0" x2="16.0" y2="4.5"/><line x1="21.7" y1="10.3" x2="24.1" y2="7.9"/><circle cx="16" cy="16" r="5.4"/></g></svg>', name:'夏季選色', use:'你的日常主力色'},
-    autumn:{icon:'<img src="assets/maple-leaf.png" alt="" style="width:26px;height:26px;object-fit:contain;display:block;">', name:'秋季選色', use:'沉穩深色時穿'},
-    winter:{icon:'<svg width="26" height="26" viewBox="0 0 32 32" style="display:block"><g fill="none" stroke="#4F332B" stroke-width="2.2" stroke-linecap="round"><line x1="16" y1="16" x2="27.0" y2="16.0"/><line x1="22.6" y1="16.0" x2="25.4" y2="18.3"/><line x1="22.6" y1="16.0" x2="25.4" y2="13.7"/><line x1="16" y1="16" x2="21.5" y2="25.5"/><line x1="19.3" y1="21.7" x2="18.7" y2="25.3"/><line x1="19.3" y1="21.7" x2="22.7" y2="22.9"/><line x1="16" y1="16" x2="10.5" y2="25.5"/><line x1="12.7" y1="21.7" x2="9.3" y2="22.9"/><line x1="12.7" y1="21.7" x2="13.3" y2="25.3"/><line x1="16" y1="16" x2="5.0" y2="16.0"/><line x1="9.4" y1="16.0" x2="6.6" y2="13.7"/><line x1="9.4" y1="16.0" x2="6.6" y2="18.3"/><line x1="16" y1="16" x2="10.5" y2="6.5"/><line x1="12.7" y1="10.3" x2="13.3" y2="6.7"/><line x1="12.7" y1="10.3" x2="9.3" y2="9.1"/><line x1="16" y1="16" x2="21.5" y2="6.5"/><line x1="19.3" y1="10.3" x2="22.7" y2="9.1"/><line x1="19.3" y1="10.3" x2="18.7" y2="6.7"/></g></svg>', name:'冬季選色', use:'想強調對比、有氣場時'},
+    spring:{icon:'<img src="assets/season-spring.png" alt="" style="width:26px;height:26px;object-fit:contain;display:block;">', name:'春季選色', use:'明亮輕盈時穿'},
+    summer:{icon:'<img src="assets/season-summer.png" alt="" style="width:26px;height:26px;object-fit:contain;display:block;">', name:'夏季選色', use:'你的日常主力色'},
+    autumn:{icon:'<img src="assets/season-autumn.png" alt="" style="width:26px;height:26px;object-fit:contain;display:block;">', name:'秋季選色', use:'沉穩深色時穿'},
+    winter:{icon:'<img src="assets/season-winter.png" alt="" style="width:26px;height:26px;object-fit:contain;display:block;">', name:'冬季選色', use:'想強調對比、有氣場時'},
   };
   return seasons.map(s=>{
     const d = p[s], m = meta[s];
@@ -1829,6 +1852,7 @@ function finishColorQuiz(){
   document.getElementById('quiz-color').style.display='none';
   const resWrap = document.getElementById('result-color');
   resWrap.style.display='block';
+  requestAnimationFrame(fitResultName);
   resWrap.innerHTML = `
     <div class="result-hero">
       <div class="eyebrow">The Colour Story</div>
@@ -1996,6 +2020,7 @@ function finishShapeQuiz(){
   document.getElementById('quiz-shape').style.display='none';
   const resWrap = document.getElementById('result-shape');
   resWrap.style.display='block';
+  requestAnimationFrame(fitResultName);
 
   const propText = {
     longtop:'上身較長，下身多用高腰版型拉長腿部比例。',
@@ -2300,6 +2325,7 @@ function finishFaceQuiz(){
   document.getElementById('quiz-face').style.display='none';
   const resWrap = document.getElementById('result-face');
   resWrap.style.display='block';
+  requestAnimationFrame(fitResultName);
 
   const bangLine = bangExtra.length ? `<b>瀏海與髮際線：</b>${s.bang}（${bangExtra.join('；')}）` : `<b>瀏海：</b>${s.bang}`;
 
@@ -3066,9 +3092,15 @@ ${d.avoid.map(o=>`${o.label}：${o.text}`).join('\n')}`:''}
         </div>
       </div>
 
-      <div style="padding:0 16px 16px;display:flex;gap:8px;">
-        <button onclick="copyShareText()" style="flex:1;border:1px solid ${accent};background:#fff;color:${accent};border-radius:2px;padding:11px;font-weight:700;cursor:pointer;font-size:13px;">複製文字</button>
-        <button onclick="document.getElementById('share-modal').remove()" style="flex:1;border:none;background:${accent};color:#fff;border-radius:2px;padding:11px;font-weight:700;cursor:pointer;font-size:13px;">完成</button>
+      <div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:8px;">
+        <button onclick="shareToday()" style="width:100%;border:none;background:${accent};color:#fff;border-radius:2px;padding:12px;font-weight:700;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:7px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
+          直接分享
+        </button>
+        <div style="display:flex;gap:8px;">
+          <button onclick="copyShareText()" style="flex:1;border:1px solid ${accent};background:#fff;color:${accent};border-radius:2px;padding:11px;font-weight:700;cursor:pointer;font-size:13px;">複製文字</button>
+          <button onclick="document.getElementById('share-modal').remove()" style="flex:1;border:1px solid var(--line-strong);background:#fff;color:var(--ink-faint);border-radius:2px;padding:11px;font-weight:700;cursor:pointer;font-size:13px;">完成</button>
+        </div>
       </div>
     </div>`;
   modal._shareText = shareText;
@@ -3082,6 +3114,27 @@ function copyShareText(){
     navigator.clipboard.writeText(txt).then(()=>showToast('已複製今日推薦文字')).catch(()=>showToast('複製失敗，請手動選取'));
   } else {
     showToast('此環境不支援自動複製');
+  }
+}
+
+// 直接分享：用裝置原生分享面板（LINE / IG / 訊息…），不支援時自動退回複製文字
+async function shareToday(){
+  const modal = document.getElementById('share-modal');
+  const txt = modal ? modal._shareText : '';
+  if(!txt){ showToast('沒有可分享的內容'); return; }
+  if(navigator.share){
+    try{
+      await navigator.share({ title:'命定造型・今日推薦', text:txt });
+    }catch(e){
+      // 使用者自己取消分享不算錯誤，不提示
+      if(e && e.name !== 'AbortError'){
+        showToast('此裝置無法直接分享，已改為複製文字');
+        copyShareText();
+      }
+    }
+  } else {
+    showToast('此裝置不支援直接分享，已改為複製文字');
+    copyShareText();
   }
 }
 
@@ -3376,6 +3429,17 @@ function updateMoodTrend(){
   document.getElementById('moodTrendBox').style.display='block';
 }
 
+/* ======== HTML 跳脫工具：使用者自由輸入的文字插入 innerHTML 前一律經過 ======== */
+function escapeHTML(str){
+  if(str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /* ======== 儲存封裝層（偵測 localStorage，原型環境自動退回記憶體） ======== */
 const store = (function(){
   let ok = false;
@@ -3390,7 +3454,14 @@ const store = (function(){
       }catch(e){ return fallback; }
     },
     set(key, val){
-      try{ if(ok){ localStorage.setItem(key, JSON.stringify(val)); } else { mem[key]=val; } }catch(e){ mem[key]=val; }
+      try{ if(ok){ localStorage.setItem(key, JSON.stringify(val)); } else { mem[key]=val; } }
+      catch(e){
+        mem[key]=val; // 退回記憶體，本次工作階段仍可用
+        // 容量不足（QuotaExceededError）時，明確提示使用者
+        if(e && (e.name==='QuotaExceededError' || e.code===22 || e.code===1014)){
+          try{ if(typeof showToast==='function') showToast('儲存空間已滿，照片可能無法永久保存，建議刪除部分舊照片'); }catch(_){}
+        }
+      }
     }
   };
 })();
@@ -3764,7 +3835,7 @@ function renderWardrobe(){
         <div style="display:flex;align-items:center;gap:11px;border:1.5px solid var(--line);border-radius:var(--radius-m);padding:10px 14px;margin-bottom:9px;background:var(--surface);">
           ${o.img?`<img src="${o.img}" alt="" style="width:44px;height:44px;border-radius:var(--radius-s);object-fit:cover;flex-shrink:0;">`:''}
           <div style="flex:1;">
-            <div style="font-size:13.5px;font-weight:700;color:var(--ink);">${o.name}${o.isClassic?'<span style="font-size:10px;font-weight:700;color:var(--magenta-deep);background:var(--magenta-pale);padding:2px 6px;border-radius:999px;margin-left:6px;">經典</span>':''}</div>
+            <div style="font-size:13.5px;font-weight:700;color:var(--ink);">${escapeHTML(o.name)}${o.isClassic?'<span style="font-size:10px;font-weight:700;color:var(--magenta-deep);background:var(--magenta-pale);padding:2px 6px;border-radius:999px;margin-left:6px;">經典</span>':''}</div>
             <div style="font-size:11px;color:var(--ink-faint);margin-top:2px;">${o.cat} · ${o.status||'常穿'}</div>
           </div>
           <button onclick="removeOwned(${o.id})" style="background:none;border:none;font-size:18px;color:var(--ink-faint);cursor:pointer;line-height:1;padding:4px;">×</button>
@@ -3857,7 +3928,7 @@ function openPhotoWall(){
               <div style="width:100%;aspect-ratio:1;border-radius:var(--radius-m);overflow:hidden;border:1.5px solid var(--line);background:var(--bg);">
                 <img src="${o.img}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">
               </div>
-              <div style="font-size:11px;font-weight:600;color:var(--ink);margin-top:6px;line-height:1.4;text-wrap:pretty;">${o.name}</div>
+              <div style="font-size:11px;font-weight:600;color:var(--ink);margin-top:6px;line-height:1.4;text-wrap:pretty;">${escapeHTML(o.name)}</div>
             </div>`).join('')}
         </div>
       </div>`;
@@ -3902,7 +3973,7 @@ function renderWishlist(){
         <!-- 單品標題列 -->
         <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;background:${allDone?'var(--mint-pale)':'var(--surface)'};" onclick="toggleWishItem(${idx})">
           <div style="flex:1;">
-            <div style="font-size:13.5px;font-weight:700;color:${allDone?'var(--mint)':'var(--ink)'};">${item.name}</div>
+            <div style="font-size:13.5px;font-weight:700;color:${allDone?'var(--mint)':'var(--ink)'};">${escapeHTML(item.name)}</div>
             <div style="font-size:11px;color:var(--ink-faint);margin-top:2px;">${item.cat} · 核對 ${doneCount}/${total} 項</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
@@ -3920,7 +3991,7 @@ function renderWishlist(){
                 <div class="check-box ${c.done?'checked':''}" onclick="toggleWishCheck(${idx},${ci})" style="margin-top:1px;">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
                 </div>
-                <span style="color:${c.done?'var(--ink-soft)':'var(--ink)'};${c.done?'text-decoration:line-through;':''}">${c.q}</span>
+                <span style="color:${c.done?'var(--ink-soft)':'var(--ink)'};${c.done?'text-decoration:line-through;':''}">${escapeHTML(c.q)}</span>
               </div>
             `).join('')}
             <div style="display:flex;gap:8px;margin-top:12px;">
