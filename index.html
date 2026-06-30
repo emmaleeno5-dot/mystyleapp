@@ -1359,11 +1359,11 @@
       <div class="chip-row" id="wishCatChips" style="margin-bottom:14px;">
         <button class="chip" data-cat="上衣" onclick="selectWishCat(this)">上衣</button>
         <button class="chip" data-cat="下身" onclick="selectWishCat(this)">下身</button>
+        <button class="chip" data-cat="洋裝" onclick="selectWishCat(this)">洋裝</button>
         <button class="chip" data-cat="外套" onclick="selectWishCat(this)">外套</button>
         <button class="chip" data-cat="鞋" onclick="selectWishCat(this)">鞋</button>
         <button class="chip" data-cat="包" onclick="selectWishCat(this)">包</button>
         <button class="chip" data-cat="配飾" onclick="selectWishCat(this)">配飾</button>
-        <button class="chip" data-cat="彩妝" onclick="selectWishCat(this)">彩妝</button>
       </div>
       <label style="display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;">
         <div id="wishPhotoPreview" style="width:48px;height:48px;border-radius:var(--radius-s);border:1.5px dashed var(--line-strong);display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:18px;overflow:hidden;flex-shrink:0;">＋</div>
@@ -4071,11 +4071,14 @@ function removeWishItem(idx){
 }
 
 function openAddWishItem(){
-  document.getElementById('addWishForm').style.display='block';
+  const f = document.getElementById('addWishForm');
+  f.style.display='block';
   wishCatSelected='';
   wishPhotoTemp=null;
   const pv=document.getElementById('wishPhotoPreview'); if(pv) pv.innerHTML='＋';
   document.querySelectorAll('#wishCatChips .chip').forEach(c=>c.classList.remove('selected'));
+  // 表單在按鈕下方，開啟後捲到可見位置，避免使用者以為沒反應
+  requestAnimationFrame(()=>{ try{ window.scrollTo({ top: window.scrollY + f.getBoundingClientRect().top - 80, behavior:'smooth' }); }catch(e){} });
 }
 function closeAddWishItem(){
   document.getElementById('addWishForm').style.display='none';
