@@ -4148,21 +4148,36 @@ function showToast(msg){
 }
 
 function generateChecks(name, cat){
-  const base = [
-    {q:`「${name}」符合我的身形比例公式嗎？`, done:false},
-    {q:'顏色在我的命定色票範圍內嗎？', done:false},
-    {q:'能跟現有單品搭出至少 3 套穿搭嗎？', done:false},
-    {q:'是否真的缺這個品項，還是已有類似的？', done:false},
-  ];
-  // 依分類加上專屬問題
-  if(cat==='下身') base.splice(1,0,{q:'版型能呼應身形的視覺重心策略嗎？', done:false});
-  if(cat==='包') base.splice(1,0,{q:'包包落點不會卡在身形最寬處嗎？', done:false});
-  if(cat==='鞋') base.splice(1,0,{q:'鞋型能配合腿部比例與場合嗎？', done:false});
-  if(cat==='配飾') base.splice(1,0,{q:'飾品線條符合臉型量感（俐落或柔和）嗎？', done:false});
-  if(cat==='彩妝') base.splice(1,0,{q:'色調符合命定色彩的冷暖方向嗎？', done:false});
-  if(profile.shape) base[0].q = `「${name}」符合「${profile.shape.label}」的穿搭公式嗎？`;
-  if(profile.color) base[1].q = `顏色符合「${profile.color.label}」的適合色票嗎？`;
-  return base;
+  const shapeLabel = profile.shape ? profile.shape.label : null;
+  const colorLabel = profile.color ? profile.color.label : null;
+  const colorQ = colorLabel ? `顏色在「${colorLabel}」的適合色票範圍內嗎？` : '顏色在我的命定色票範圍內嗎？';
+  const checks = [];
+
+  // 第一題：依分類決定「合不合適」的判斷依據（鞋／包／配飾不看身形）
+  if(cat==='鞋'){
+    checks.push({q:'鞋型適合今天的場合，高度與鞋面好走好搭嗎？', done:false});
+  } else if(cat==='包'){
+    checks.push({q:'大小與背法符合日常使用，落點不卡在身形最寬處嗎？', done:false});
+  } else if(cat==='配飾'){
+    checks.push({q:'飾品的線條量感跟我的臉型／五官搭嗎（該俐落或該柔和）？', done:false});
+  } else if(cat==='彩妝'){
+    checks.push({q:'色調符合我的命定色彩冷暖方向嗎？', done:false});
+  } else {
+    checks.push({q: shapeLabel ? `「${name}」符合「${shapeLabel}」的穿搭公式嗎？` : `「${name}」符合我的身形比例公式嗎？`, done:false});
+  }
+
+  // 第二題：顏色（彩妝改談是否襯膚顯氣色）
+  if(cat==='彩妝'){
+    checks.push({q:'上臉後氣色變好、不顯髒或顯黃嗎？', done:false});
+  } else {
+    checks.push({q: colorQ, done:false});
+  }
+
+  // 共同：搭配力與必要性（都能在 App 內找到判斷依據）
+  checks.push({q:'能跟現有單品搭出至少 3 套穿搭嗎？', done:false});
+  checks.push({q:'是否真的缺這個品項，還是已有類似的？', done:false});
+
+  return checks;
 }
 
 restoreProfile();
